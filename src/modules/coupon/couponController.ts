@@ -4,10 +4,10 @@ import CouponModel from "./couponModel";
 import { isExpired } from "./couponFunctions";
 
 class CouponController {
-  async getCoupon(req: Request, res: Response) {
-    const { code } = req.params;
+  async verifyCoupon(req: Request, res: Response) {
+    const { code, tenantId } = req.body;
 
-    const coupon = await CouponModel.findOne({ code });
+    const coupon = await CouponModel.findOne({ code, tenantId });
 
     if (coupon) {
       if (!isExpired(coupon.validUpto)) {
@@ -21,9 +21,9 @@ class CouponController {
   }
 
   async delete(req: Request, res: Response) {
-    const { code } = req.params;
+    const { code, tenantId } = req.body;
 
-    const isDeleted = await CouponModel.findOneAndDelete({ code });
+    const isDeleted = await CouponModel.findOneAndDelete({ code, tenantId });
 
     if (isDeleted) {
       res.send({ status: "success", message: "Coupon has been deleted" });
@@ -35,7 +35,7 @@ class CouponController {
   async create(req: Request, res: Response) {
     const { title, code, validUpto, discount, tenantId } = req.body;
 
-    const exists = await CouponModel.findOne({ code });
+    const exists = await CouponModel.findOne({ code, tenantId });
 
     if (!exists) {
       const coupon = await CouponModel.create({
@@ -64,7 +64,7 @@ class CouponController {
     const { title, code, validUpto, discount, tenantId } = req.body;
 
     const updatedCoupon = await CouponModel.findOneAndUpdate(
-      { code },
+      { code, tenantId },
       { title, code, validUpto, discount, tenantId },
       { new: true },
     );
