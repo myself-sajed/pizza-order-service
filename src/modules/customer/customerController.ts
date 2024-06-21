@@ -9,8 +9,31 @@ class CustomerController {
     let customer = await CustomerModel.findOne({ userId });
 
     if (!customer) {
-      customer = new CustomerModel({ userId, name, email });
+      customer = await CustomerModel.create({ userId, name, email });
     }
+
+    res.send(customer);
+  }
+
+  async addAddress(req: Request, res: Response) {
+    const { sub: userId } = req.auth;
+    const { customerId } = req.params;
+    const { address } = req.body;
+
+    const customer = await CustomerModel.findOneAndUpdate(
+      { _id: customerId, userId },
+      {
+        $push: {
+          address: {
+            address,
+            isDefault: false,
+          },
+        },
+      },
+      {
+        new: true,
+      },
+    );
 
     res.send(customer);
   }
