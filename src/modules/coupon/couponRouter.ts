@@ -6,12 +6,8 @@ const router = express.Router();
 
 const couponController = new CouponController();
 router.post("/create", authenticate, asyncWrapper(couponController.create));
-router.get("/:code", authenticate, asyncWrapper(couponController.getCoupon));
+router.get("/", authenticate, asyncWrapper(couponController.verifyCoupon));
 router.patch("/update", authenticate, asyncWrapper(couponController.update));
-router.post(
-  "/delete/:code",
-  authenticate,
-  asyncWrapper(couponController.delete),
-);
+router.delete("/delete", authenticate, asyncWrapper(couponController.delete));
 
 export default router;
