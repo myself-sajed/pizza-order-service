@@ -6,7 +6,11 @@ const router = express.Router();
 
 const couponController = new CouponController();
 router.post("/create", authenticate, asyncWrapper(couponController.create));
-router.get("/", authenticate, asyncWrapper(couponController.verifyCoupon));
+router.post(
+  "/verify",
+  authenticate,
+  asyncWrapper(couponController.verifyCoupon),
+);
 router.patch("/update", authenticate, asyncWrapper(couponController.update));
 router.delete("/delete", authenticate, asyncWrapper(couponController.delete));
 
