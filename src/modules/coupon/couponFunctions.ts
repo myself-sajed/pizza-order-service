@@ -1,3 +1,3 @@
 export function isExpired(validUpto: Date) {
-  return new Date() > validUpto;
+  return new Date() >= validUpto;
 }
