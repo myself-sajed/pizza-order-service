@@ -1,14 +1,18 @@
 import mongoose from "mongoose";
 
+export interface AvailableOptions {
+  [key: string]: number;
+}
+
+export interface PriceConfiguration {
+  priceType: "base" | "additional";
+  availableOptions: AvailableOptions;
+}
+
 export interface ProductCache {
   _id?: string;
   productId?: string;
-  priceConfiguration: {
-    priceType: "base" | "additional";
-    availableOptions: {
-      [key: string]: string;
-    };
-  };
+  priceConfiguration: PriceConfiguration;
 }
 
 const priceConfigurationSchema = new mongoose.Schema({
