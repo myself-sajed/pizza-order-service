@@ -1,7 +1,14 @@
 import { Response } from "express";
 import { Request } from "express-jwt";
 import { validationResult } from "express-validator";
-import { CartItem, DELIVERY_CHARGE, TAXES, Topping } from "./orderTypes";
+import {
+  CartItem,
+  DELIVERY_CHARGE,
+  OrderStatus,
+  PaymentStatus,
+  TAXES,
+  Topping,
+} from "./orderTypes";
 import productCacheModel, {
   PriceConfiguration,
   ProductCache,
@@ -10,6 +17,7 @@ import toppingCacheModel, {
   ToppingCache,
 } from "../../cache/topping-cache-model";
 import couponModel from "../coupon/couponModel";
+import Order from "./orderModel";
 
 export class OrderController {
   createOrder = async (req: Request, res: Response) => {
@@ -18,9 +26,19 @@ export class OrderController {
       return res.status(400).json({ errors: result.array() });
     }
 
-    const subTotal = await this.calculateTotal(req.body.cartItems);
+    const {
+      cartItems,
+      customerId,
+      address,
+      paymentMode,
+      coupon,
+      comment,
+      tenantId,
+    } = req.body;
 
-    const amountOfDiscount = (subTotal * req.body.coupon.discount) / 100;
+    const subTotal = await this.calculateTotal(cartItems);
+
+    const amountOfDiscount = (subTotal * coupon.discount) / 100;
 
     const amountOfTax = Math.round((subTotal * TAXES) / 100);
 
@@ -28,7 +46,24 @@ export class OrderController {
       subTotal + amountOfTax + DELIVERY_CHARGE - amountOfDiscount,
     );
 
-    res.send({ status: "ok", subTotal: grandTotal });
+    // create order
+    const order = await Order.create({
+      cart: cartItems,
+      address,
+      discount: coupon.discount,
+      couponCode: coupon.title || null,
+      comment,
+      customerId,
+      deliveryCharge: DELIVERY_CHARGE,
+      orderStatus: OrderStatus.RECEIVED,
+      paymentStatus: PaymentStatus.PENDING,
+      paymentMode,
+      tax: TAXES,
+      tenantId,
+      total: grandTotal,
+    });
+
+    res.send({ status: "ok", order: order });
   };
 
   private calculateTotal = async (cart: CartItem[]) => {
