@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 export interface Tenant {
   id: string;
   name: string;
@@ -23,10 +25,6 @@ export interface PriceConfiguration {
     priceType: priceType;
     availableOptions: AvailableOptions;
   };
-}
-
-export interface ProductConfiguration {
-  [key: string]: string;
 }
 
 export interface Category {
@@ -79,6 +77,9 @@ export interface Address {
   isDefault: boolean;
 }
 
+export interface ProductConfiguration {
+  [key: string]: string;
+}
 export interface CartItem
   extends Pick<Product, "_id" | "name" | "image" | "tenantId"> {
   _id: string;
@@ -93,3 +94,41 @@ export interface CartItem
 
 export const TAXES = 12;
 export const DELIVERY_CHARGE = 50;
+
+export enum PaymentMode {
+  CARD = "Card",
+  CASH = "Cash",
+}
+
+export enum PaymentStatus {
+  PENDING = "Pending",
+  PAID = "Paid",
+  FAILED = "Failed",
+}
+
+export enum OrderStatus {
+  RECEIVED = "Received",
+  CONFIRMED = "Confirmed",
+  PREPARING = "Preparing",
+  READY_FOR_DELIVERY = "Ready for delivery",
+  OUT_FOR_DELIVERY = "Out for delivery",
+  DELIVERED = "Delivered",
+  FAILED = "Failed",
+}
+
+export interface Order {
+  cart: CartItem[];
+  customerId: mongoose.Types.ObjectId;
+  tenantId: string;
+  discount: number;
+  tax: number;
+  deliveryCharge: number;
+  total: number;
+  address: string;
+  couponCode?: string;
+  comment?: string;
+  paymentMode: PaymentMode;
+  paymentStatus: PaymentStatus;
+  orderStatus: OrderStatus;
+  paymentId?: string;
+}
