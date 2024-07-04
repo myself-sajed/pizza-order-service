@@ -18,6 +18,8 @@ import toppingCacheModel, {
 } from "../../cache/topping-cache-model";
 import couponModel from "../coupon/couponModel";
 import Order from "./orderModel";
+import Idempotency from "../idempotency/idemModel";
+import mongoose from "mongoose";
 
 export class OrderController {
   createOrder = async (req: Request, res: Response) => {
@@ -36,34 +38,67 @@ export class OrderController {
       tenantId,
     } = req.body;
 
-    const subTotal = await this.calculateTotal(cartItems);
+    const idemKey = req.headers["idem-key"];
+    const idemDoc = await Idempotency.findOne({ idemKey });
 
-    const amountOfDiscount = (subTotal * coupon.discount) / 100;
+    let order = idemDoc ? [idemDoc?.response] : [];
 
-    const amountOfTax = Math.round((subTotal * TAXES) / 100);
+    if (!idemDoc) {
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
-    const grandTotal = Math.round(
-      subTotal + amountOfTax + DELIVERY_CHARGE - amountOfDiscount,
-    );
+      try {
+        // calculate grandtotal
+        const subTotal = await this.calculateTotal(cartItems);
+        const amountOfDiscount = (subTotal * coupon.discount) / 100;
+        const amountOfTax = Math.round((subTotal * TAXES) / 100);
+        const grandTotal = Math.round(
+          subTotal + amountOfTax + DELIVERY_CHARGE - amountOfDiscount,
+        );
 
-    // create order
-    const order = await Order.create({
-      cart: cartItems,
-      address,
-      discount: coupon.discount,
-      couponCode: coupon.title || null,
-      comment,
-      customerId,
-      deliveryCharge: DELIVERY_CHARGE,
-      orderStatus: OrderStatus.RECEIVED,
-      paymentStatus: PaymentStatus.PENDING,
-      paymentMode,
-      tax: TAXES,
-      tenantId,
-      total: grandTotal,
-    });
+        // create order
+        order = await Order.create(
+          [
+            {
+              cart: cartItems,
+              address,
+              discount: coupon.discount,
+              couponCode: coupon.title || null,
+              comment,
+              customerId,
+              deliveryCharge: DELIVERY_CHARGE,
+              orderStatus: OrderStatus.RECEIVED,
+              paymentStatus: PaymentStatus.PENDING,
+              paymentMode,
+              tax: TAXES,
+              tenantId,
+              total: grandTotal,
+            },
+          ],
+          { session },
+        );
 
-    res.send({ status: "ok", order: order });
+        await Idempotency.create(
+          [
+            {
+              idemKey,
+              response: order[0],
+            },
+          ],
+          { session },
+        );
+        await session.commitTransaction();
+      } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error(error);
+        throw new Error("Error creating order");
+      } finally {
+        session.endSession();
+      }
+    }
+
+    res.send({ status: "success", order: order[0] });
   };
 
   private calculateTotal = async (cart: CartItem[]) => {
