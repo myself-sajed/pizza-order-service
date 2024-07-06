@@ -6,6 +6,10 @@ export interface Customer {
 }
 
 export interface Address {
-  address: string;
+  addressLine: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
   isDefault: boolean;
 }

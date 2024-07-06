@@ -3,7 +3,23 @@ import { Address, Customer } from "./customerTypes";
 
 const addressSchema = new mongoose.Schema<Address>(
   {
-    address: {
+    addressLine: {
+      type: String,
+      required: false,
+    },
+    city: {
+      type: String,
+      required: false,
+    },
+    state: {
+      type: String,
+      required: false,
+    },
+    pincode: {
+      type: String,
+      required: false,
+    },
+    country: {
       type: String,
       required: false,
     },

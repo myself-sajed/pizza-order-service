@@ -18,14 +18,18 @@ class CustomerController {
   async addAddress(req: Request, res: Response) {
     const { sub: userId } = req.auth;
     const { customerId } = req.params;
-    const { address } = req.body;
+    const { addressLine, pincode, city, state, country } = req.body;
 
     const customer = await CustomerModel.findOneAndUpdate(
       { _id: customerId, userId },
       {
         $push: {
           address: {
-            address,
+            addressLine,
+            pincode,
+            city,
+            state,
+            country,
             isDefault: false,
           },
         },
