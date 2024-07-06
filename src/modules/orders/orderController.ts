@@ -20,8 +20,11 @@ import couponModel from "../coupon/couponModel";
 import Order from "./orderModel";
 import Idempotency from "../idempotency/idemModel";
 import mongoose from "mongoose";
+import { PaymentGW } from "../../payment/paymentTypes";
 
 export class OrderController {
+  constructor(private paymentGW: PaymentGW) {}
+
   createOrder = async (req: Request, res: Response) => {
     const result = validationResult(req);
     if (!result.isEmpty()) {
@@ -42,21 +45,20 @@ export class OrderController {
     const idemDoc = await Idempotency.findOne({ idemKey });
 
     let order = idemDoc ? [idemDoc?.response] : [];
+    // calculate grandtotal
+    const subTotal = await this.calculateTotal(cartItems);
+    const amountOfDiscount = (subTotal * coupon.discount) / 100;
+    const amountOfTax = Math.round((subTotal * TAXES) / 100);
+    const grandTotal = Math.round(
+      subTotal + amountOfTax + DELIVERY_CHARGE - amountOfDiscount,
+    );
 
     if (!idemDoc) {
       const session = await mongoose.startSession();
       session.startTransaction();
 
+      // create order
       try {
-        // calculate grandtotal
-        const subTotal = await this.calculateTotal(cartItems);
-        const amountOfDiscount = (subTotal * coupon.discount) / 100;
-        const amountOfTax = Math.round((subTotal * TAXES) / 100);
-        const grandTotal = Math.round(
-          subTotal + amountOfTax + DELIVERY_CHARGE - amountOfDiscount,
-        );
-
-        // create order
         order = await Order.create(
           [
             {
@@ -98,7 +100,16 @@ export class OrderController {
       }
     }
 
-    res.send({ status: "success", order: order[0] });
+    // handle payment
+    const session = await this.paymentGW.createSession({
+      amount: grandTotal,
+      orderId: order[0]._id.toString(),
+      tenantId,
+      idemKey: idemKey as string,
+      currency: "inr",
+    });
+
+    res.send({ status: "success", session });
   };
 
   private calculateTotal = async (cart: CartItem[]) => {
