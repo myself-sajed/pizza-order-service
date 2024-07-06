@@ -1,9 +1,14 @@
+import { Address } from "../modules/customer/customerTypes";
+
 export interface PaymentOptions {
   currency?: "inr";
   amount: number;
   orderId: string;
   tenantId: string;
   idemKey?: string;
+  customerEmail: string;
+  customerName: string;
+  address: Address;
 }
 type GatewayPaymentStatus = "no_payment_required" | "paid" | "unpaid";
 

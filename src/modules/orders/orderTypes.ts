@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import { Address } from "../customer/customerTypes";
 
 export interface Tenant {
   id: string;
   name: string;
-  address: string;
+  address: Address;
 }
 
 export type priceType = "base" | "additional";
@@ -72,11 +73,6 @@ export interface Customer {
   address: Address[];
 }
 
-export interface Address {
-  address: string;
-  isDefault: boolean;
-}
-
 export interface ProductConfiguration {
   [key: string]: string;
 }
@@ -124,7 +120,7 @@ export interface Order {
   tax: number;
   deliveryCharge: number;
   total: number;
-  address: string;
+  address: Address;
   couponCode?: string;
   comment?: string;
   paymentMode: PaymentMode;

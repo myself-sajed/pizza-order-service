@@ -20,16 +20,27 @@ export class StripGW implements PaymentGW {
     const cancelURL = `${config.get("server.originURIClient")}/payment?success=false&orderId=${options.orderId}&restaurant=${options.tenantId}`;
     const logoURL = `${config.get("server.backendURI")}/order/logo`;
 
-    console.log(logoURL);
+    console.log("options :", options);
 
     try {
       const session = await this.stripe.checkout.sessions.create(
         {
+          customer_email: options.customerEmail,
           metadata: {
             orderId: options.orderId,
             restaurantId: options.tenantId,
           },
-          billing_address_collection: "required",
+          payment_intent_data: {
+            shipping: {
+              name: options.customerName,
+              address: {
+                line1: options.address.addressLine,
+                city: options.address.city,
+                postal_code: options.address.pincode,
+                state: options.address.state,
+              },
+            },
+          },
           line_items: [
             {
               price_data: {

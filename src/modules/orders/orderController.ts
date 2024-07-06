@@ -5,6 +5,7 @@ import {
   CartItem,
   DELIVERY_CHARGE,
   OrderStatus,
+  PaymentMode,
   PaymentStatus,
   TAXES,
   Topping,
@@ -21,6 +22,7 @@ import Order from "./orderModel";
 import Idempotency from "../idempotency/idemModel";
 import mongoose from "mongoose";
 import { PaymentGW } from "../../payment/paymentTypes";
+import customerModel from "../customer/customerModel";
 
 export class OrderController {
   constructor(private paymentGW: PaymentGW) {}
@@ -44,8 +46,13 @@ export class OrderController {
     const idemKey = req.headers["idem-key"];
     const idemDoc = await Idempotency.findOne({ idemKey });
 
+    const customer = await customerModel.findOne({ _id: customerId });
+
+    if (!customer) {
+      return res.send({ status: "error", message: "Customer not found" });
+    }
+
     let order = idemDoc ? [idemDoc?.response] : [];
-    // calculate grandtotal
     const subTotal = await this.calculateTotal(cartItems);
     const amountOfDiscount = (subTotal * coupon.discount) / 100;
     const amountOfTax = Math.round((subTotal * TAXES) / 100);
@@ -57,7 +64,6 @@ export class OrderController {
       const session = await mongoose.startSession();
       session.startTransaction();
 
-      // create order
       try {
         order = await Order.create(
           [
@@ -100,16 +106,27 @@ export class OrderController {
       }
     }
 
-    // handle payment
-    const session = await this.paymentGW.createSession({
-      amount: grandTotal,
-      orderId: order[0]._id.toString(),
-      tenantId,
-      idemKey: idemKey as string,
-      currency: "inr",
-    });
+    if (paymentMode === PaymentMode.CARD) {
+      // handle payment
+      const session = await this.paymentGW.createSession({
+        amount: grandTotal,
+        orderId: order[0]._id.toString(),
+        tenantId,
+        idemKey: idemKey as string,
+        currency: "inr",
+        customerEmail: customer.email,
+        customerName: customer.name,
+        address,
+      });
 
-    res.send({ status: "success", session });
+      res.send({
+        status: "success",
+        paymentURL: session.paymentUrl,
+        paymentMode,
+      });
+    } else {
+      res.send({ status: "success", paymentURL: null, paymentMode });
+    }
   };
 
   private calculateTotal = async (cart: CartItem[]) => {

@@ -48,7 +48,7 @@ const orderSchema = new mongoose.Schema<Order>(
       required: true,
     },
     address: {
-      type: String,
+      type: Object,
       required: true,
     },
     comment: {
