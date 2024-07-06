@@ -7,7 +7,7 @@ import {
 } from "./paymentTypes";
 import config from "config";
 
-export class StripGW implements PaymentGW {
+export class StripeGW implements PaymentGW {
   private stripe: Stripe;
 
   constructor() {
@@ -19,8 +19,6 @@ export class StripGW implements PaymentGW {
     const successURL = `${config.get("server.originURIClient")}/payment?success=true&orderId=${options.orderId}&restaurant=${options.tenantId}`;
     const cancelURL = `${config.get("server.originURIClient")}/payment?success=false&orderId=${options.orderId}&restaurant=${options.tenantId}`;
     const logoURL = `${config.get("server.backendURI")}/order/logo`;
-
-    console.log("options :", options);
 
     try {
       const session = await this.stripe.checkout.sessions.create(

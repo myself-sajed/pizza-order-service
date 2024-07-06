@@ -3,12 +3,12 @@ import { OrderController } from "./orderController";
 import { asyncWrapper } from "../../utils";
 import authenticate from "../../common/middleware/authenticate";
 import createOrderValidator from "./createOrderValidator";
-import { StripGW } from "../../payment/stripe";
 import path from "path";
+import createPaymentGW from "../../factories/paymentGateway";
 
 const router = express.Router();
 
-const paymentGW = new StripGW();
+const paymentGW = createPaymentGW();
 const orderController = new OrderController(paymentGW);
 router.post(
   "/createOrder",

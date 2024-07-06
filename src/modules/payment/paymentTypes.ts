@@ -1,4 +1,4 @@
-import { Address } from "../modules/customer/customerTypes";
+import { Address } from "../customer/customerTypes";
 
 export interface PaymentOptions {
   currency?: "inr";

@@ -13,7 +13,6 @@ const startServer = async () => {
     await connectDB();
 
     messageBroker = createMessageBroker();
-    // revive the broker
     // await messageBroker.connectConsumer();
     // await messageBroker.consumeMessage(["product", "topping"], false);
 

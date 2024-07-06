@@ -21,7 +21,7 @@ import couponModel from "../coupon/couponModel";
 import Order from "./orderModel";
 import Idempotency from "../idempotency/idemModel";
 import mongoose from "mongoose";
-import { PaymentGW } from "../../payment/paymentTypes";
+import { PaymentGW } from "../payment/paymentTypes";
 import customerModel from "../customer/customerModel";
 
 export class OrderController {
