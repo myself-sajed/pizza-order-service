@@ -2,9 +2,13 @@ import { Request, Response } from "express";
 import { PaymentGW } from "./paymentTypes";
 import orderModel from "../orders/orderModel";
 import { PaymentStatus } from "../orders/orderTypes";
+import { MessageBroker } from "../../types/broker";
 
 export class PaymentController {
-  constructor(private paymentGW: PaymentGW) {}
+  constructor(
+    private paymentGW: PaymentGW,
+    private broker: MessageBroker,
+  ) {}
 
   handleWebhook = async (req: Request, res: Response) => {
     const webhookBody = req.body;
@@ -15,9 +19,7 @@ export class PaymentController {
 
       const isPaymentSuccess = verifiedSession.paymentStatus === "paid";
 
-      console.log(verifiedSession);
-
-      const updatedOrder = await orderModel.updateOne(
+      const updatedOrder = await orderModel.findOneAndUpdate(
         { _id: verifiedSession.metadata.orderId },
         {
           paymentStatus: isPaymentSuccess
@@ -31,6 +33,7 @@ export class PaymentController {
       );
 
       // send message to kafka broker
+      this.broker.sendMessage("order", JSON.stringify(updatedOrder));
     }
 
     res.send({ status: "OK" });

@@ -5,11 +5,13 @@ import authenticate from "../../common/middleware/authenticate";
 import createOrderValidator from "./createOrderValidator";
 import path from "path";
 import createPaymentGW from "../../factories/paymentGateway";
+import { createMessageBroker } from "../../factories/messageBroker";
 
 const router = express.Router();
 
 const paymentGW = createPaymentGW();
-const orderController = new OrderController(paymentGW);
+const broker = createMessageBroker();
+const orderController = new OrderController(paymentGW, broker);
 router.post(
   "/createOrder",
   authenticate,

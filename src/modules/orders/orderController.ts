@@ -23,9 +23,13 @@ import Idempotency from "../idempotency/idemModel";
 import mongoose from "mongoose";
 import { PaymentGW } from "../payment/paymentTypes";
 import customerModel from "../customer/customerModel";
+import { MessageBroker } from "../../types/broker";
 
 export class OrderController {
-  constructor(private paymentGW: PaymentGW) {}
+  constructor(
+    private paymentGW: PaymentGW,
+    private broker: MessageBroker,
+  ) {}
 
   createOrder = async (req: Request, res: Response) => {
     const result = validationResult(req);
@@ -119,12 +123,18 @@ export class OrderController {
         address,
       });
 
+      // send message to kafka
+      this.broker.sendMessage("order", JSON.stringify(order));
+
       res.send({
         status: "success",
         paymentURL: session.paymentUrl,
         paymentMode,
       });
     } else {
+      // send message to kafka
+      this.broker.sendMessage("order", JSON.stringify(order));
+
       res.send({ status: "success", paymentURL: null, paymentMode });
     }
   };
