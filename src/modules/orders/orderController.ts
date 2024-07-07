@@ -24,12 +24,29 @@ import mongoose from "mongoose";
 import { PaymentGW } from "../payment/paymentTypes";
 import customerModel from "../customer/customerModel";
 import { MessageBroker } from "../../types/broker";
+import orderModel from "./orderModel";
 
 export class OrderController {
   constructor(
     private paymentGW: PaymentGW,
     private broker: MessageBroker,
   ) {}
+
+  getOrder = async (req: Request, res: Response) => {
+    const order = await orderModel.findOne({
+      _id: req.params.orderId,
+      tenantId: req.params.tenantId,
+    });
+    res.send(order);
+  };
+
+  deleteOrder = async (req: Request, res: Response) => {
+    const order = await orderModel.findOneAndDelete({
+      _id: req.params.orderId,
+      tenantId: req.params.tenantId,
+    });
+    res.send(order);
+  };
 
   createOrder = async (req: Request, res: Response) => {
     const result = validationResult(req);
@@ -80,7 +97,10 @@ export class OrderController {
               customerId,
               deliveryCharge: DELIVERY_CHARGE,
               orderStatus: OrderStatus.RECEIVED,
-              paymentStatus: PaymentStatus.PENDING,
+              paymentStatus:
+                paymentMode === PaymentMode.CARD
+                  ? PaymentStatus.FAILED
+                  : PaymentStatus.PENDING,
               paymentMode,
               tax: TAXES,
               tenantId,
@@ -124,7 +144,7 @@ export class OrderController {
       });
 
       // send message to kafka
-      this.broker.sendMessage("order", JSON.stringify(order));
+      this.broker.sendMessage("order", JSON.stringify(order[0]));
 
       res.send({
         status: "success",
@@ -133,9 +153,15 @@ export class OrderController {
       });
     } else {
       // send message to kafka
-      this.broker.sendMessage("order", JSON.stringify(order));
+      this.broker.sendMessage("order", JSON.stringify(order[0]));
 
-      res.send({ status: "success", paymentURL: null, paymentMode });
+      res.send({
+        status: "success",
+        paymentURL: null,
+        paymentMode,
+        orderId: order[0]._id,
+        tenantId,
+      });
     }
   };
 

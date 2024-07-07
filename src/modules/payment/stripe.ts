@@ -16,8 +16,8 @@ export class StripeGW implements PaymentGW {
   }
 
   async createSession(options: PaymentOptions) {
-    const successURL = `${config.get("server.originURIClient")}/payment?success=true&orderId=${options.orderId}&restaurant=${options.tenantId}`;
-    const cancelURL = `${config.get("server.originURIClient")}/payment?success=false&orderId=${options.orderId}&restaurant=${options.tenantId}`;
+    const successURL = `${config.get("server.originURIClient")}/order-placement-status?orderId=${options.orderId}&restaurant=${options.tenantId}`;
+    const cancelURL = `${config.get("server.originURIClient")}/order-placement-status?orderId=${options.orderId}&restaurant=${options.tenantId}`;
     const logoURL = `${config.get("server.backendURI")}/order/logo`;
 
     try {
@@ -26,7 +26,7 @@ export class StripeGW implements PaymentGW {
           customer_email: options.customerEmail,
           metadata: {
             orderId: options.orderId,
-            restaurantId: options.tenantId,
+            tenantId: options.tenantId,
           },
           payment_intent_data: {
             shipping: {

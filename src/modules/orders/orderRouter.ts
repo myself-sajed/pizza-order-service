@@ -19,6 +19,18 @@ router.post(
   asyncWrapper(orderController.createOrder),
 );
 
+router.get(
+  "/:orderId/:tenantId",
+  authenticate,
+  asyncWrapper(orderController.getOrder),
+);
+
+router.delete(
+  "/:orderId/:tenantId",
+  authenticate,
+  asyncWrapper(orderController.deleteOrder),
+);
+
 router.get("/logo", (_: Request, res: Response) => {
   const logoPath = path.join(__dirname, `logo.svg`);
   res.sendFile(logoPath);
