@@ -40,6 +40,21 @@ export class OrderController {
     res.send(order);
   };
 
+  getMyOrders = async (req: Request, res: Response) => {
+    const customer = await customerModel.findOne({ userId: req.auth.sub });
+
+    if (!customer) {
+      return res.send([]);
+    }
+
+    const orders = await orderModel.find({
+      customerId: customer._id,
+      paymentStatus: PaymentStatus.PAID,
+    });
+
+    res.send(orders || []);
+  };
+
   deleteOrder = async (req: Request, res: Response) => {
     const order = await orderModel.findOneAndDelete({
       _id: req.params.orderId,

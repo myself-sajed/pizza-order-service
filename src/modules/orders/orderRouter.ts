@@ -25,6 +25,12 @@ router.get(
   asyncWrapper(orderController.getOrder),
 );
 
+router.get(
+  "/getMyOrders",
+  authenticate,
+  asyncWrapper(orderController.getMyOrders),
+);
+
 router.delete(
   "/:orderId/:tenantId",
   authenticate,
