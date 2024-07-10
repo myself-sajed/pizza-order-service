@@ -25,6 +25,7 @@ app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Hello from order service service!" });
 });
 
+//routes
 app.use("/customer", customerRouter);
 app.use("/coupon", couponRouter);
 app.use("/order", orderRouter);
