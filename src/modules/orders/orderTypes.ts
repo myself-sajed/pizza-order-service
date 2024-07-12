@@ -105,7 +105,7 @@ export enum PaymentStatus {
 export enum OrderStatus {
   RECEIVED = "Received",
   CONFIRMED = "Confirmed",
-  PREPARING = "Preparing",
+  PREPARING = "Prepared",
   OUT_FOR_DELIVERY = "Out for delivery",
   DELIVERED = "Delivered",
   FAILED = "Failed",
