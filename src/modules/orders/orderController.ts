@@ -33,10 +33,22 @@ export class OrderController {
   ) {}
 
   getOrder = async (req: Request, res: Response) => {
-    const order = await orderModel.findOne({
-      _id: req.params.orderId,
-      tenantId: req.params.tenantId,
-    });
+    const select = req.query.select
+      ? req.query.select.toString().trim().split(",")
+      : [];
+
+    const projection = select.reduce((acc, item) => {
+      acc[item] = 1;
+      return acc;
+    }, {});
+
+    const order = await orderModel.findOne(
+      {
+        _id: req.params.orderId,
+        tenantId: req.params.tenantId,
+      },
+      projection,
+    );
     res.send(order);
   };
 
