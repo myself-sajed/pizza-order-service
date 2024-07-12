@@ -106,7 +106,6 @@ export enum OrderStatus {
   RECEIVED = "Received",
   CONFIRMED = "Confirmed",
   PREPARING = "Preparing",
-  READY_FOR_DELIVERY = "Ready for delivery",
   OUT_FOR_DELIVERY = "Out for delivery",
   DELIVERED = "Delivered",
   FAILED = "Failed",
