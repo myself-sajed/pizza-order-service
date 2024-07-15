@@ -1,6 +1,24 @@
 import mongoose from "mongoose";
 import { Address } from "../customer/customerTypes";
 
+export interface GetOrderFilter {
+  tenantId?: string;
+  paymentMode?: string;
+  orderStatus?: string;
+}
+
+export const paginationLabels = {
+  docs: "data",
+  totalDocs: "total",
+  limit: "pageSize",
+  page: "currentPage",
+} as const;
+
+export interface PaginationFilters {
+  page: number;
+  limit: number;
+}
+
 export interface Tenant {
   id: string;
   name: string;

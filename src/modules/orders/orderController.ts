@@ -4,7 +4,9 @@ import { validationResult } from "express-validator";
 import {
   CartItem,
   DELIVERY_CHARGE,
+  GetOrderFilter,
   OrderStatus,
+  paginationLabels,
   PaymentMode,
   PaymentStatus,
   TAXES,
@@ -50,6 +52,111 @@ export class OrderController {
       projection,
     );
     res.send(order);
+  };
+
+  getSingleAdminOrder = async (req: Request, res: Response) => {
+    const orderId = req.body.orderId;
+    const role = req.auth.role;
+    const tenant = req.auth.tenant;
+
+    if (role === "Admin" || role === "Manager") {
+      const order = await orderModel.findOne({
+        _id: orderId,
+      });
+
+      const isCorrectManager = tenant === order.tenantId;
+      if (role === "Manager" && isCorrectManager) {
+        res.send({
+          status: "success",
+          order,
+        });
+      } else if (role === "Admin") {
+        res.send({
+          status: "success",
+          order,
+        });
+      } else {
+        res.send({
+          status: "error",
+          message: "You're not allowed to fetch the order",
+        });
+      }
+    } else {
+      res.send({
+        status: "error",
+        message: "You're not allowed to fetch the order",
+      });
+    }
+  };
+
+  getAllOrders = async (req: Request, res: Response) => {
+    const { q, tenantId, orderStatus, paymentMode } = req.query;
+
+    const paginateFilters = {
+      page: req.query.page ? parseInt(req.query.page as string) : 1,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
+    };
+
+    const filter: GetOrderFilter = {};
+
+    if (tenantId && tenantId !== "null" && tenantId !== "undefined") {
+      filter.tenantId = tenantId as string;
+    }
+
+    if (orderStatus && orderStatus !== "null" && orderStatus !== "undefined") {
+      filter.orderStatus = orderStatus as string;
+    }
+
+    if (paymentMode && paymentMode !== "null" && paymentMode !== "undefined") {
+      filter.paymentMode = paymentMode as string;
+    }
+
+    // Only add the name query if 'q' is provided and is not an empty string
+    const matchQuery = {
+      ...filter,
+      ...(q ? { _id: new RegExp(q as string, "i") } : {}),
+    };
+
+    const aggregate = orderModel.aggregate([
+      {
+        $match: matchQuery,
+      },
+      {
+        $lookup: {
+          from: "customers",
+          localField: "customerId",
+          as: "customer",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                email: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: "$customer",
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+    ]);
+
+    const orders = await orderModel.aggregatePaginate(aggregate, {
+      ...paginateFilters,
+      customLabels: paginationLabels,
+    });
+
+    res.send({
+      data: orders,
+      total: orders.total,
+      pageSize: orders.pageSize,
+      currentPage: orders.currentPage,
+    });
   };
 
   getMyOrders = async (req: Request, res: Response) => {

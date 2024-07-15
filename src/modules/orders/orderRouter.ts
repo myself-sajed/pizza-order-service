@@ -25,10 +25,22 @@ router.get(
   asyncWrapper(orderController.getOrder),
 );
 
+router.post(
+  "/getSingleAdminOrder",
+  authenticate,
+  asyncWrapper(orderController.getSingleAdminOrder),
+);
+
 router.get(
   "/getMyOrders",
   authenticate,
   asyncWrapper(orderController.getMyOrders),
+);
+
+router.get(
+  "/getAllOrders",
+  authenticate,
+  asyncWrapper(orderController.getAllOrders),
 );
 
 router.delete(

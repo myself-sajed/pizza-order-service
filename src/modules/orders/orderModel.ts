@@ -6,6 +6,7 @@ import {
   PaymentMode,
   PaymentStatus,
 } from "./orderTypes";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const toppingSchema = new mongoose.Schema({
   _id: {
@@ -100,5 +101,7 @@ const orderSchema = new mongoose.Schema<Order>(
   },
   { timestamps: true },
 );
+
+orderSchema.plugin(mongooseAggregatePaginate);
 
 export default mongoose.model("Order", orderSchema);
