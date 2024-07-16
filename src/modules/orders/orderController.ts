@@ -106,6 +106,7 @@ export class OrderController {
             _id: orderId,
           },
           { $set: { orderStatus } },
+          { new: true },
         )
         .populate("customerId")
         .exec();
@@ -163,6 +164,8 @@ export class OrderController {
     if (paymentMode && paymentMode !== "null" && paymentMode !== "undefined") {
       filter.paymentMode = paymentMode as string;
     }
+
+    filter.paymentStatus = PaymentStatus.PAID;
 
     // Only add the name query if 'q' is provided and is not an empty string
     const matchQuery = {
