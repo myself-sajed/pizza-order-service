@@ -4,5 +4,5 @@ export interface MessageBroker {
   consumeMessage: (topics: string[], fromBeginning: boolean) => Promise<void>;
   connectProducer: () => Promise<void>;
   disconnectProducer: () => Promise<void>;
-  sendMessage: (topics: string, message: string) => Promise<void>;
+  sendMessage: (topics: string, message: string, key?: string) => Promise<void>;
 }

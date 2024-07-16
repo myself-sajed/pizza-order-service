@@ -5,6 +5,7 @@ import {
   CartItem,
   DELIVERY_CHARGE,
   GetOrderFilter,
+  KafkaOrderEventTypes,
   OrderStatus,
   paginationLabels,
   PaymentMode,
@@ -108,6 +109,13 @@ export class OrderController {
         )
         .populate("customerId")
         .exec();
+
+      const brokerMessage = {
+        event_type: KafkaOrderEventTypes.ORDER_STATUS_UPDATED,
+        data: order,
+      };
+
+      this.broker.sendMessage("order", JSON.stringify(brokerMessage));
 
       const isCorrectManager = tenant === order.tenantId;
       if (role === "Manager" && isCorrectManager) {
@@ -323,7 +331,11 @@ export class OrderController {
       });
 
       // send message to kafka
-      this.broker.sendMessage("order", JSON.stringify(order[0]));
+      const brokerMessage = {
+        event_type: KafkaOrderEventTypes.ORDER_CREATED,
+        data: order[0],
+      };
+      this.broker.sendMessage("order", JSON.stringify(brokerMessage));
 
       res.send({
         status: "success",
@@ -332,7 +344,11 @@ export class OrderController {
       });
     } else {
       // send message to kafka
-      this.broker.sendMessage("order", JSON.stringify(order[0]));
+      const brokerMessage = {
+        event_type: KafkaOrderEventTypes.ORDER_CREATED,
+        data: order[0],
+      };
+      this.broker.sendMessage("order", JSON.stringify(brokerMessage));
 
       res.send({
         status: "success",

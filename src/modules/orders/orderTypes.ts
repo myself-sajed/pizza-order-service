@@ -145,3 +145,9 @@ export interface Order {
   orderStatus: OrderStatus;
   paymentId?: string;
 }
+
+export const KafkaOrderEventTypes = {
+  ORDER_CREATED: "ORDER_CREATED",
+  PAYMENT_STATUS_UPDATED: "PAYMENT_STATUS_UPDATED",
+  ORDER_STATUS_UPDATED: "ORDER_STATUS_UPDATED",
+};

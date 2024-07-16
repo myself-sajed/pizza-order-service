@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { PaymentGW } from "./paymentTypes";
 import orderModel from "../orders/orderModel";
-import { PaymentStatus } from "../orders/orderTypes";
+import { KafkaOrderEventTypes, PaymentStatus } from "../orders/orderTypes";
 import { MessageBroker } from "../../types/broker";
 
 export class PaymentController {
@@ -33,7 +33,12 @@ export class PaymentController {
       );
 
       // send message to kafka broker
-      this.broker.sendMessage("order", JSON.stringify(updatedOrder));
+      const brokerMessage = {
+        event_type: KafkaOrderEventTypes.PAYMENT_STATUS_UPDATED,
+        data: updatedOrder,
+      };
+
+      this.broker.sendMessage("order", JSON.stringify(brokerMessage));
     }
 
     res.send({ status: "OK" });
