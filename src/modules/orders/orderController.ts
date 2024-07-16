@@ -92,6 +92,48 @@ export class OrderController {
     }
   };
 
+  changeOrderStatus = async (req: Request, res: Response) => {
+    const orderId = req.body.orderId;
+    const orderStatus = req.body.orderStatus;
+    const role = req.auth.role;
+    const tenant = req.auth.tenant;
+
+    if (role === "Admin" || role === "Manager") {
+      const order = await orderModel
+        .findOneAndUpdate(
+          {
+            _id: orderId,
+          },
+          { $set: { orderStatus } },
+        )
+        .populate("customerId")
+        .exec();
+
+      const isCorrectManager = tenant === order.tenantId;
+      if (role === "Manager" && isCorrectManager) {
+        res.send({
+          status: "success",
+          order,
+        });
+      } else if (role === "Admin") {
+        res.send({
+          status: "success",
+          order,
+        });
+      } else {
+        res.send({
+          status: "error",
+          message: "You're not allowed to change the status of the order",
+        });
+      }
+    } else {
+      res.send({
+        status: "error",
+        message: "You're not allowed to change the status of the order",
+      });
+    }
+  };
+
   getAllOrders = async (req: Request, res: Response) => {
     const { q, tenantId, orderStatus, paymentMode } = req.query;
 

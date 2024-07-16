@@ -31,6 +31,12 @@ router.post(
   asyncWrapper(orderController.getSingleAdminOrder),
 );
 
+router.post(
+  "/changeOrderStatus",
+  authenticate,
+  asyncWrapper(orderController.changeOrderStatus),
+);
+
 router.get(
   "/getMyOrders",
   authenticate,
