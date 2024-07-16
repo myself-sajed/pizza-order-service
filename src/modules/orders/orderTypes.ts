@@ -5,6 +5,7 @@ export interface GetOrderFilter {
   tenantId?: string;
   paymentMode?: string;
   orderStatus?: string;
+  paymentStatus?: string;
 }
 
 export const paginationLabels = {
