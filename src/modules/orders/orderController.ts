@@ -60,9 +60,12 @@ export class OrderController {
     const tenant = req.auth.tenant;
 
     if (role === "Admin" || role === "Manager") {
-      const order = await orderModel.findOne({
-        _id: orderId,
-      });
+      const order = await orderModel
+        .findOne({
+          _id: orderId,
+        })
+        .populate("customerId")
+        .exec();
 
       const isCorrectManager = tenant === order.tenantId;
       if (role === "Manager" && isCorrectManager) {

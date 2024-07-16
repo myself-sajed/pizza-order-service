@@ -58,7 +58,7 @@ const orderSchema = new mongoose.Schema<Order>(
     },
     customerId: {
       type: Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: "customer",
       required: true,
     },
     deliveryCharge: {
