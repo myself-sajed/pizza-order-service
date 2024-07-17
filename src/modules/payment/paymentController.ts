@@ -19,22 +19,27 @@ export class PaymentController {
 
       const isPaymentSuccess = verifiedSession.paymentStatus === "paid";
 
-      const updatedOrder = await orderModel.findOneAndUpdate(
-        { _id: verifiedSession.metadata.orderId },
-        {
-          paymentStatus: isPaymentSuccess
-            ? PaymentStatus.PAID
-            : PaymentStatus.FAILED,
-          paymentId: verifiedSession.id,
-        },
-        {
-          new: true,
-        },
-      );
+      const updatedOrder = await orderModel
+        .findOneAndUpdate(
+          { _id: verifiedSession.metadata.orderId },
+          {
+            paymentStatus: isPaymentSuccess
+              ? PaymentStatus.PAID
+              : PaymentStatus.FAILED,
+            paymentId: verifiedSession.id,
+          },
+          {
+            new: true,
+          },
+        )
+        .populate("customerId")
+        .exec();
 
       // send message to kafka broker
       const brokerMessage = {
-        event_type: KafkaOrderEventTypes.PAYMENT_STATUS_UPDATED,
+        event_type: isPaymentSuccess
+          ? KafkaOrderEventTypes.ORDER_CREATED
+          : KafkaOrderEventTypes.ORDER_PAYMENT_FAILED,
         data: updatedOrder,
       };
 

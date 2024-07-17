@@ -320,11 +320,26 @@ export class OrderController {
       }
     }
 
+    if (!order[0]) {
+      res.send({
+        status: "error",
+        paymentURL: null,
+        paymentMode,
+        orderId: null,
+        tenantId,
+      });
+    }
+
+    const newOrder = await orderModel
+      .findOne({ _id: order[0]._id })
+      .populate("customerId")
+      .exec();
+
     if (paymentMode === PaymentMode.CARD) {
       // handle payment
       const session = await this.paymentGW.createSession({
         amount: grandTotal,
-        orderId: order[0]._id.toString(),
+        orderId: newOrder._id.toString(),
         tenantId,
         idemKey: idemKey as string,
         currency: "inr",
@@ -335,8 +350,8 @@ export class OrderController {
 
       // send message to kafka
       const brokerMessage = {
-        event_type: KafkaOrderEventTypes.ORDER_CREATED,
-        data: order[0],
+        event_type: KafkaOrderEventTypes.ORDER_PAYMENT_PENDING,
+        data: newOrder,
       };
       this.broker.sendMessage("order", JSON.stringify(brokerMessage));
 
@@ -349,7 +364,7 @@ export class OrderController {
       // send message to kafka
       const brokerMessage = {
         event_type: KafkaOrderEventTypes.ORDER_CREATED,
-        data: order[0],
+        data: newOrder,
       };
       this.broker.sendMessage("order", JSON.stringify(brokerMessage));
 
@@ -357,7 +372,7 @@ export class OrderController {
         status: "success",
         paymentURL: null,
         paymentMode,
-        orderId: order[0]._id,
+        orderId: newOrder._id,
         tenantId,
       });
     }
