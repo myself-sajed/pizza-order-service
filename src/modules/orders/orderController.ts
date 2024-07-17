@@ -165,7 +165,7 @@ export class OrderController {
       filter.paymentMode = paymentMode as string;
     }
 
-    filter.paymentStatus = PaymentStatus.PAID;
+    filter.paymentStatus = { $ne: PaymentStatus.FAILED };
 
     // Only add the name query if 'q' is provided and is not an empty string
     const matchQuery = {
