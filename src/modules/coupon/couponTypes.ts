@@ -3,5 +3,10 @@ export interface ICoupon {
   code: string;
   discount: number;
   validUpto: Date;
-  tenantId: string | null;
+  tenantId?: string | null;
+}
+
+export interface GetCouponFilter {
+  tenantId?: string;
+  discount?: number;
 }

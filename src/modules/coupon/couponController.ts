@@ -2,8 +2,51 @@ import { Response } from "express";
 import { Request } from "express-jwt";
 import CouponModel from "./couponModel";
 import { isExpired } from "./couponFunctions";
+import { GetCouponFilter } from "./couponTypes";
+import { paginationLabels } from "../orders/orderTypes";
 
 class CouponController {
+  async getAllCoupons(req: Request, res: Response) {
+    const { q, tenantId, discount } = req.query;
+
+    const paginateFilters = {
+      page: req.query.page ? parseInt(req.query.page as string) : 1,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
+    };
+
+    const filter: GetCouponFilter = {};
+
+    if (tenantId && tenantId !== "null" && tenantId !== "undefined") {
+      filter.tenantId = tenantId as string;
+    }
+
+    if (discount && discount !== "null" && discount !== "undefined") {
+      filter.discount = parseInt(discount as string);
+    }
+
+    // Only add the name query if 'q' is provided and is not an empty string
+    const matchQuery = {
+      ...filter,
+      ...(q ? { code: new RegExp(q as string, "i") } : {}),
+    };
+
+    const aggregate = CouponModel.aggregate([
+      {
+        $match: matchQuery,
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+    ]);
+
+    const coupons = await CouponModel.aggregatePaginate(aggregate, {
+      ...paginateFilters,
+      customLabels: paginationLabels,
+    });
+
+    res.send(coupons);
+  }
+
   async verifyCoupon(req: Request, res: Response) {
     const { code, tenantId } = req.body;
 
@@ -35,6 +78,8 @@ class CouponController {
   async create(req: Request, res: Response) {
     const { title, code, validUpto, discount, tenantId } = req.body;
 
+    console.log(title, code, tenantId);
+
     const exists = await CouponModel.findOne({ code, tenantId });
 
     if (!exists) {
@@ -61,10 +106,10 @@ class CouponController {
   }
 
   async update(req: Request, res: Response) {
-    const { title, code, validUpto, discount, tenantId } = req.body;
+    const { title, code, validUpto, discount, tenantId, _id } = req.body;
 
     const updatedCoupon = await CouponModel.findOneAndUpdate(
-      { code, tenantId },
+      { _id },
       { title, code, validUpto, discount, tenantId },
       { new: true },
     );

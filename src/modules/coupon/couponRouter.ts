@@ -5,6 +5,12 @@ import authenticate from "../../common/middleware/authenticate";
 const router = express.Router();
 
 const couponController = new CouponController();
+
+router.get(
+  "/getAllCoupons",
+  authenticate,
+  asyncWrapper(couponController.getAllCoupons),
+);
 router.post("/create", authenticate, asyncWrapper(couponController.create));
 router.post(
   "/verify",
