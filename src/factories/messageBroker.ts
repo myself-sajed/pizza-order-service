@@ -8,7 +8,7 @@ export const createMessageBroker = () => {
   const broker = config.get("kafka.broker");
 
   if (!messageBroker) {
-    messageBroker = new KafkaMessageBroker("order-service", [broker as string]);
+    messageBroker = new KafkaMessageBroker("order-service", broker as string[]);
   }
 
   return messageBroker;
