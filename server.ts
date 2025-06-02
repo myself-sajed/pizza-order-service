@@ -6,7 +6,7 @@ import { MessageBroker } from "./src/types/broker";
 import { createMessageBroker } from "./src/factories/messageBroker";
 
 const startServer = async () => {
-  const PORT = config.get("server.port") || 5503;
+  const PORT = config.get("server.port") || 5004;
   let messageBroker: MessageBroker | null = null;
 
   try {
